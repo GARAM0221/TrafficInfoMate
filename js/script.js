@@ -1,10 +1,14 @@
 document.getElementById('routeForm').addEventListener('submit', function(e) {
     e.preventDefault(); // 폼 기본 제출 동작을 방지합니다.
 
+    var mapLink = document.getElementById('mapLink').value;
+    // 링크 분석 로직을 여기에 구현합니다.
+    // 예를 들어, URL에서 query parameter를 파싱하여 필요한 정보를 추출합니다.
+
     var startPoint = document.getElementById('startPoint').value;
     var endPoint = document.getElementById('endPoint').value;
 
-    // 여기에 출발지와 목적지를 사용하여 경로를 조회하는 코드를 추가합니다.
+    // 추출한 정보를 바탕으로 경로를 조회하는 로직을 추가합니다.
     // 예: searchRoute(startPoint, endPoint);
 });
 
