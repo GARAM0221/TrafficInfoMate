@@ -68,10 +68,14 @@ function generateKakaoMapLink(startLat, startLng, coordinates) {
 function onAnalyzeClick() {
     getCurrentLocation(function(lat, lng) {
         if (lat != null && lng != null) {
-            analyzeMapLink(); // 이전에 정의된 분석 함수 호출
-            // 이 후, `generateKakaoMapLink` 함수를 사용하여 링크 생성 및 결과 표시 부분 추가 필요
+            analyzeMapLink(); // 이 함수 내에서 coordinates 변수를 글로벌로 사용하거나 다른 방식으로 접근해야 할 수도 있습니다.
+            const kakaoMapLink = generateKakaoMapLink(lat, lng, coordinates); // 여기서 coordinates는 analyzeMapLink 함수에서 추출된 좌표 배열입니다.
+            // kakaoMapLink를 화면에 표시하는 로직 추가
+            const resultContainer = document.getElementById('linkAnalysisResult');
+            resultContainer.innerHTML += `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
         } else {
             alert("현재 위치를 가져올 수 없습니다.");
         }
     });
 }
+
