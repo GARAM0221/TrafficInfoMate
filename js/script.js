@@ -16,7 +16,6 @@ window.onload = function() {
 
 function analyzeMapLink() {
     const mapLink = document.getElementById('mapLinkInput').value;
-    // 링크 분석 로직 구현
     const linkParts = mapLink.split('&');
     let coordinates = [];
 
@@ -68,11 +67,15 @@ function generateKakaoMapLink(startLat, startLng, coordinates) {
 function onAnalyzeClick() {
     getCurrentLocation(function(lat, lng) {
         if (lat != null && lng != null) {
-            analyzeMapLink(); // 이 함수 내에서 coordinates 변수를 글로벌로 사용하거나 다른 방식으로 접근해야 할 수도 있습니다.
-            const kakaoMapLink = generateKakaoMapLink(lat, lng, coordinates); // 여기서 coordinates는 analyzeMapLink 함수에서 추출된 좌표 배열입니다.
-            // kakaoMapLink를 화면에 표시하는 로직 추가
-            const resultContainer = document.getElementById('linkAnalysisResult');
-            resultContainer.innerHTML += `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
+            const coordinates = analyzeMapLink(); // analyzeMapLink 함수에서 좌표 배열을 받음
+            if(coordinates.length > 0) { // 좌표가 정상적으로 추출된 경우에만 처리
+                const kakaoMapLink = generateKakaoMapLink(lat, lng, coordinates); // 좌표 배열을 사용하여 링크 생성
+                // kakaoMapLink를 화면에 표시하는 로직 추가
+                const resultContainer = document.getElementById('linkAnalysisResult');
+                resultContainer.innerHTML += `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
+            } else {
+                alert("링크에서 좌표를 추출할 수 없습니다.");
+            }
         } else {
             alert("현재 위치를 가져올 수 없습니다.");
         }
