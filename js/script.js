@@ -34,6 +34,38 @@ function analyzeMapLink() {
     return coordinates.flat(); // 평탄화하여 반환
 }
 
+function getCurrentLocation(callback) {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            callback(latitude, longitude);
+        }, function(error) {
+            console.error("Geolocation error: " + error.message);
+            callback(null, null);
+        });
+    } else {
+        console.error("Geolocation is not supported by this browser.");
+        callback(null, null);
+    }
+}
+
+function generateKakaoMapLink(startLat, startLng, coordinates) {
+    const baseLink = "https://map.kakao.com/?sName=Current Location";
+    let routeLink = `&eX=${coordinates[coordinates.length - 2]}&eY=${coordinates[coordinates.length - 1]}&eName=Destination`;
+
+    // 경유지가 있다면 추가
+    if (coordinates.length > 2) {
+        for (let i = 0; i < coordinates.length - 2; i += 2) {
+            routeLink += `&viaX=${coordinates[i]}&viaY=${coordinates[i + 1]}`;
+        }
+    }
+
+    // 출발지 (현재 위치) 추가
+    routeLink = `&sX=${startLng}&sY=${startLat}` + routeLink;
+    return baseLink + routeLink;
+}
+
 function onAnalyzeClick() {
     getCurrentLocation(function(lat, lng) {
         if (lat != null && lng != null) {
