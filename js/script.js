@@ -10,27 +10,9 @@ function showSection(sectionId) {
 }
 
 // 페이지 로드 시 첫 번째 섹션을 기본적으로 활성화합니다.
-    window.onload = function() {
-       showSection('link-analysis'); // 기본적으로 첫 번째 기능을 보여줍니다.
+window.onload = function() {
+    showSection('link-analysis'); // 기본적으로 첫 번째 기능을 보여줍니다.
 };
-
-function analyzeMapLink() {
-    const mapLink = document.getElementById('mapLinkInput').value;
-    // 링크 분석 로직 구현
-    // 예시: 'https://map.kakao.com/?map_type=TYPE_MAP&target=car&rt=위도,경도,...' 형태의 링크 분석
-    const linkParts = mapLink.split('&');
-    let coordinates = [];
-
-    linkParts.forEach(part => {
-        if (part.startsWith('rt=')) {
-            coordinates = part.substring(3).split(',');
-        }
-    });
-
-    // 결과 표시 로직 구현
-    const resultContainer = document.getElementById('linkAnalysisResult');
-    resultContainer.innerHTML = `<p>추출된 좌표: ${coordinates.join(', ')}</p>`;
-}
 
 function analyzeMapLink() {
     const mapLink = document.getElementById('mapLinkInput').value;
@@ -49,4 +31,47 @@ function analyzeMapLink() {
     // 결과 표시 로직 구현
     const resultContainer = document.getElementById('linkAnalysisResult');
     resultContainer.innerHTML = `<p>추출된 좌표: ${coordinates.join(', ')}</p>`;
+}
+
+function getCurrentLocation(callback) {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            callback(latitude, longitude);
+        }, function(error) {
+            console.error("Geolocation error: " + error.message);
+            callback(null, null);
+        });
+    } else {
+        console.error("Geolocation is not supported by this browser.");
+        callback(null, null);
+    }
+}
+
+function generateKakaoMapLink(startLat, startLng, coordinates) {
+    const baseLink = "https://map.kakao.com/?sName=Current Location";
+    let routeLink = `&eX=${coordinates[coordinates.length - 2]}&eY=${coordinates[coordinates.length - 1]}&eName=Destination`;
+
+    // 경유지가 있다면 추가
+    if (coordinates.length > 2) {
+        for (let i = 0; i < coordinates.length - 2; i += 2) {
+            routeLink += `&viaX=${coordinates[i]}&viaY=${coordinates[i + 1]}`;
+        }
+    }
+
+    // 출발지 (현재 위치) 추가
+    routeLink = `&sX=${startLng}&sY=${startLat}` + routeLink;
+    return baseLink + routeLink;
+}
+
+function onAnalyzeClick() {
+    getCurrentLocation(function(lat, lng) {
+        if (lat != null && lng != null) {
+            analyzeMapLink(); // 이전에 정의된 분석 함수 호출
+            // 이 후, `generateKakaoMapLink` 함수를 사용하여 링크 생성 및 결과 표시 부분 추가 필요
+        } else {
+            alert("현재 위치를 가져올 수 없습니다.");
+        }
+    });
 }
