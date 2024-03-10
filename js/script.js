@@ -31,3 +31,22 @@ function analyzeMapLink() {
     const resultContainer = document.getElementById('linkAnalysisResult');
     resultContainer.innerHTML = `<p>추출된 좌표: ${coordinates.join(', ')}</p>`;
 }
+
+function analyzeMapLink() {
+    const mapLink = document.getElementById('mapLinkInput').value;
+    // 링크 분석 로직 구현
+    const linkParts = mapLink.split('&');
+    let coordinates = [];
+
+    linkParts.forEach(part => {
+        if (part.startsWith('rt=')) {
+            // %20을 공백으로 치환합니다.
+            const coordsPart = part.substring(3).replace(/%20/g, ' ');
+            coordinates = coordsPart.split(',');
+        }
+    });
+
+    // 결과 표시 로직 구현
+    const resultContainer = document.getElementById('linkAnalysisResult');
+    resultContainer.innerHTML = `<p>추출된 좌표: ${coordinates.join(', ')}</p>`;
+}
