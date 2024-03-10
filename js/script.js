@@ -22,57 +22,26 @@ function analyzeMapLink() {
     linkParts.forEach(part => {
         if (part.startsWith('rt=')) {
             // %20을 공백으로 치환합니다.
-            const coordsPart = part.substring(3).replace(/%20/g, ' ');
-            coordinates = coordsPart.split(',');
+            const coordsPart = part.substring(3).replace(/%20/g, ' ').split(',');
+            // 좌표를 배열에 추가합니다.
+            for (let i = 0; i < coordsPart.length; i += 2) {
+                coordinates.push([parseFloat(coordsPart[i]), parseFloat(coordsPart[i + 1])]);
+            }
         }
     });
 
-    // 결과 표시 로직 구현
-    const resultContainer = document.getElementById('linkAnalysisResult');
-    resultContainer.innerHTML = `<p>추출된 좌표: ${coordinates.join(', ')}</p>`;
-}
-
-function getCurrentLocation(callback) {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
-            callback(latitude, longitude);
-        }, function(error) {
-            console.error("Geolocation error: " + error.message);
-            callback(null, null);
-        });
-    } else {
-        console.error("Geolocation is not supported by this browser.");
-        callback(null, null);
-    }
-}
-
-function generateKakaoMapLink(startLat, startLng, coordinates) {
-    const baseLink = "https://map.kakao.com/?sName=Current Location";
-    let routeLink = `&eX=${coordinates[coordinates.length - 2]}&eY=${coordinates[coordinates.length - 1]}&eName=Destination`;
-
-    // 경유지가 있다면 추가
-    if (coordinates.length > 2) {
-        for (let i = 0; i < coordinates.length - 2; i += 2) {
-            routeLink += `&viaX=${coordinates[i]}&viaY=${coordinates[i + 1]}`;
-        }
-    }
-
-    // 출발지 (현재 위치) 추가
-    routeLink = `&sX=${startLng}&sY=${startLat}` + routeLink;
-    return baseLink + routeLink;
+    // 함수가 좌표 배열을 반환하도록 수정합니다.
+    return coordinates.flat(); // 평탄화하여 반환
 }
 
 function onAnalyzeClick() {
     getCurrentLocation(function(lat, lng) {
         if (lat != null && lng != null) {
             const coordinates = analyzeMapLink(); // analyzeMapLink 함수에서 좌표 배열을 받음
-            if(coordinates.length > 0) { // 좌표가 정상적으로 추출된 경우에만 처리
-                const kakaoMapLink = generateKakaoMapLink(lat, lng, coordinates); // 좌표 배열을 사용하여 링크 생성
-                // kakaoMapLink를 화면에 표시하는 로직 추가
+            if(coordinates && coordinates.length > 0) { // 좌표가 정상적으로 추출된 경우에만 처리
+                const kakaoMapLink = generateKakaoMapLink(lat, lng, coordinates);
                 const resultContainer = document.getElementById('linkAnalysisResult');
-                resultContainer.innerHTML += `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
+                resultContainer.innerHTML = `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
             } else {
                 alert("링크에서 좌표를 추출할 수 없습니다.");
             }
@@ -81,4 +50,3 @@ function onAnalyzeClick() {
         }
     });
 }
-
