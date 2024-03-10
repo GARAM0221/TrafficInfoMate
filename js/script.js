@@ -13,3 +13,21 @@ function showSection(sectionId) {
 window.onload = function() {
     showSection('link-analysis'); // 기본적으로 첫 번째 기능을 보여줍니다.
 };
+
+function analyzeMapLink() {
+    const mapLink = document.getElementById('mapLinkInput').value;
+    // 링크 분석 로직 구현
+    // 예시: 'https://map.kakao.com/?map_type=TYPE_MAP&target=car&rt=위도,경도,...' 형태의 링크 분석
+    const linkParts = mapLink.split('&');
+    let coordinates = [];
+
+    linkParts.forEach(part => {
+        if (part.startsWith('rt=')) {
+            coordinates = part.substring(3).split(',');
+        }
+    });
+
+    // 결과 표시 로직 구현
+    const resultContainer = document.getElementById('linkAnalysisResult');
+    resultContainer.innerHTML = `<p>추출된 좌표: ${coordinates.join(', ')}</p>`;
+}

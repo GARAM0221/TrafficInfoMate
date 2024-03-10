@@ -23,3 +23,41 @@ nav ul li {
 .active {
     display: block;
 }
+
+/* 기본적인 섹션 스타일 */
+.feature-section {
+    display: none; /* 기본적으로 섹션을 숨깁니다. */
+    padding: 20px;
+    margin-top: 20px;
+    background-color: #f4f4f4;
+    border-radius: 8px;
+}
+
+/* 활성화된 섹션을 보여주는 스타일 */
+.feature-section.active {
+    display: block; /* 활성화된 섹션만 보여줍니다. */
+}
+
+/* 네비게이션 바 스타일 */
+nav ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+nav ul li {
+    display: inline;
+    margin-right: 10px;
+}
+
+button {
+    background-color: #4CAF50; /* 녹색 */
+    color: white;
+    padding: 10px 20px;
+    margin: 10px 0;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
