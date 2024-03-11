@@ -50,17 +50,54 @@ function getCurrentLocation(callback) {
 
 function generateKakaoMapLink(currentLat, currentLng, coordinates) {
     let baseLink = "https://map.kakao.com/?map_type=TYPE_MAP&target=car";
-    let routeParam = "&rt=";
+    // 출발지의 경도(longitude)와 위도(latitude) 순서를 올바르게 수정
+    let sParam = `&sX=${currentLng}&sY=${currentLat}`;
+    let rtParam = "&rt=";
 
-    // 첫 번째 경유지로 현재 위치 추가
-    routeParam += `${currentLat},${currentLng}`;
+    // 첫 번째 경유지로 현재 위치 추가 (경도, 위도 순서 주의)
+    // 현재 위치가 첫 경유지가 아니라 출발지로 처리되어야 하므로, 이 부분은 제거
+    // rtParam += `${currentLat},${currentLng}`;
 
-    // 이후 경유지 및 목적지(마지막 좌표)를 rtParam에 추가
+    // 이후 경유지 및 목적지(마지막 좌표)를 rtParam에 추가 (경도, 위도 순서로 추가)
     for (let i = 0; i < coordinates.length; i += 2) {
-        routeParam += `,${coordinates[i]},${coordinates[i + 1]}`;
+        rtParam += `${coordinates[i]},${coordinates[i + 1]},`;
     }
+    // 마지막에 추가된 콤마(,)를 제거합니다.
+    rtParam = rtParam.slice(0, -1);
 
-    return baseLink + routeParam;
+    return baseLink + sParam + rtParam;
+}
+
+function getCurrentLocationAndTransform(callback) {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            var currentLat = position.coords.latitude;
+            var currentLng = position.coords.longitude;
+
+            // 카카오맵 API 로드
+            kakao.maps.load(function() {
+                var geocoder = new kakao.maps.services.Geocoder();
+
+                // WGS84 좌표를 카카오맵의 좌표계로 변환
+                var coord = new kakao.maps.LatLng(currentLat, currentLng);
+                geocoder.coord2Address(coord.getLng(), coord.getLat(), function(result, status) {
+                    if (status === kakao.maps.services.Status.OK) {
+                        // 변환된 좌표를 callback 함수에 전달
+                        callback(result[0].x, result[0].y);
+                    } else {
+                        console.error("좌표 변환 실패");
+                        callback(null, null);
+                    }
+                });
+            });
+        }, function(error) {
+            console.error("Geolocation error: " + error.message);
+            callback(null, null);
+        });
+    } else {
+        console.error("Geolocation is not supported by this browser.");
+        callback(null, null);
+    }
 }
 
 function onAnalyzeClick() {
