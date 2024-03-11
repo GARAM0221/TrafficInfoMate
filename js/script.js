@@ -46,6 +46,23 @@ function getCurrentLocationAndTransformToTM(callback) {
     }
 }
 
+function analyzeMapLink() {
+    const mapLink = document.getElementById('mapLinkInput').value;
+    const linkParts = mapLink.split('&');
+    let coordinates = [];
+
+    linkParts.forEach(part => {
+        if (part.startsWith('rt=')) {
+            const coordsPart = part.substring(3).replace(/%20/g, ' ').split(',');
+            for (let i = 0; i < coordsPart.length; i += 2) {
+                coordinates.push([parseFloat(coordsPart[i]), parseFloat(coordsPart[i + 1])]);
+            }
+        }
+    });
+
+    return coordinates.flat();
+}
+
 function generateKakaoMapLink(transformedTMy, transformedTMx, coordinates) {
     let baseLink = "https://map.kakao.com/?map_type=TYPE_MAP&target=car&rt=";
     // 변환된 TM 좌표를 맨 앞에 추가합니다.
