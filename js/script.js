@@ -51,20 +51,20 @@ function getCurrentLocation(callback) {
 }
 
 function generateKakaoMapLink(startLat, startLng, coordinates) {
-    const baseLink = "https://map.kakao.com/?sName=Current Location";
-    let routeLink = `&eX=${coordinates[coordinates.length - 2]}&eY=${coordinates[coordinates.length - 1]}&eName=Destination`;
+    let baseLink = "https://map.kakao.com/?map_type=TYPE_MAP&map_attribute=ROADVIEW&target=car";
+    let routeLink = `&sX=${startLng}&sY=${startLat}`; // 현재 위치를 출발지로 설정
 
-    // 경유지가 있다면 추가
-    if (coordinates.length > 2) {
-        for (let i = 0; i < coordinates.length - 2; i += 2) {
-            routeLink += `&viaX=${coordinates[i]}&viaY=${coordinates[i + 1]}`;
-        }
+    // 목적지 설정 (coordinates 배열의 마지막 2개 값)
+    routeLink += `&eX=${coordinates[coordinates.length - 2]}&eY=${coordinates[coordinates.length - 1]}`;
+
+    // 경유지 설정 (coordinates 배열의 나머지 값들)
+    for (let i = 0; i < coordinates.length - 2; i += 2) {
+        routeLink += `&viaX=${coordinates[i]}&viaY=${coordinates[i + 1]}`;
     }
 
-    // 출발지 (현재 위치) 추가
-    routeLink = `&sX=${startLng}&sY=${startLat}` + routeLink;
     return baseLink + routeLink;
 }
+
 
 function onAnalyzeClick() {
     getCurrentLocation(function(lat, lng) {
