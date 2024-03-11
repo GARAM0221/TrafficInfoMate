@@ -37,9 +37,7 @@ function analyzeMapLink() {
 function getCurrentLocation(callback) {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(position) {
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
-            callback(latitude, longitude);
+            callback(position.coords.latitude, position.coords.longitude);
         }, function(error) {
             console.error("Geolocation error: " + error.message);
             callback(null, null);
@@ -50,32 +48,36 @@ function getCurrentLocation(callback) {
     }
 }
 
-function generateKakaoMapLink(coordinates) {
+function generateKakaoMapLink(startLat, startLng, coordinates) {
     let baseLink = "https://map.kakao.com/?map_type=TYPE_MAP&target=car";
+    // 출발지를 현재 위치로 설정합니다.
+    let sParam = `&sX=${startLng}&sY=${startLat}`;
     let rtParam = "&rt=";
 
-    // coordinates 배열에는 위도와 경도가 번갈아 가며 저장되어 있음
+    // coordinates 배열에는 경유지와 목적지의 위도와 경도가 번갈아 가며 저장되어 있음
     for (let i = 0; i < coordinates.length; i += 2) {
         if (i > 0) rtParam += ",";
         rtParam += `${coordinates[i]},${coordinates[i + 1]}`;
     }
 
-    // 경유지와 목적지에 대한 추가 설명이 필요한 경우, rt1, rt2, ... 파라미터에 추가
-    // 예제에서는 rt 파라미터만 사용
-
-    return baseLink + rtParam; // 최종 생성된 링크 반환
+    return baseLink + sParam + rtParam;
 }
 
 function onAnalyzeClick() {
-    // analyzeMapLink 함수에서 좌표 배열을 가져오는 코드 생략
-    const coordinates = analyzeMapLink(); // 예시에서는 이 함수를 호출하여 좌표 배열을 가져옵니다.
-
-    if (coordinates && coordinates.length > 0) {
-        const kakaoMapLink = generateKakaoMapLink(coordinates);
-        const resultContainer = document.getElementById('linkAnalysisResult');
-        resultContainer.innerHTML = `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
-    } else {
-        alert("링크에서 좌표를 추출할 수 없습니다.");
-    }
+    getCurrentLocation(function(lat, lng) {
+        if (lat != null && lng != null) {
+            // 현재 위치가 정상적으로 얻어진 경우
+            const coordinates = analyzeMapLink(); // 이 함수는 페이지에서 입력된 링크를 분석하여 경유지와 목적지의 좌표 배열을 반환합니다.
+            if(coordinates && coordinates.length > 0) {
+                const kakaoMapLink = generateKakaoMapLink(lat, lng, coordinates);
+                const resultContainer = document.getElementById('linkAnalysisResult');
+                resultContainer.innerHTML = `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
+            } else {
+                alert("링크에서 좌표를 추출할 수 없습니다.");
+            }
+        } else {
+            alert("현재 위치를 가져올 수 없습니다.");
+        }
+    });
 }
 
