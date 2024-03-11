@@ -69,6 +69,7 @@ function onAnalyzeClick() {
             // 현재 위치가 정상적으로 얻어진 경우
             const coordinates = analyzeMapLink(); // 이 함수는 페이지에서 입력된 링크를 분석하여 경유지와 목적지의 좌표 배열을 반환합니다.
             if(coordinates && coordinates.length > 0) {
+                // 현재 위치(위도와 경도)를 출발지로 설정하여 카카오맵 링크 생성
                 const kakaoMapLink = generateKakaoMapLink(lat, lng, coordinates);
                 const resultContainer = document.getElementById('linkAnalysisResult');
                 resultContainer.innerHTML = `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
@@ -80,4 +81,3 @@ function onAnalyzeClick() {
         }
     });
 }
-
