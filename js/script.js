@@ -50,19 +50,20 @@ function getCurrentLocation(callback) {
 
 function generateKakaoMapLink(startLat, startLng, coordinates) {
     let baseLink = "https://map.kakao.com/?map_type=TYPE_MAP&target=car";
-    let rtParam = "&rt=";
+    let routeLink = "&rt=";
 
     // coordinates 배열에는 경유지와 목적지의 위도와 경도가 번갈아 가며 저장되어 있음
     coordinates.forEach((coord, index) => {
-        if(index > 0) rtParam += ",";
-        rtParam += `${coord[0]},${coord[1]}`; // coord[0]은 위도, coord[1]은 경도
+        if(index > 0) routeLink += ","; // 첫 번째 좌표가 아니라면 콤마로 구분
+        routeLink += `${coord[0]},${coord[1]}`; // coord[0]은 위도, coord[1]은 경도
     });
 
     // 현재 위치를 출발지로 설정합니다.
     let sParam = `&sX=${startLng}&sY=${startLat}`;
 
-    return baseLink + sParam + rtParam;
+    return baseLink + sParam + routeLink; // 수정: sParam과 routeLink를 올바르게 연결
 }
+
 
 
 function onAnalyzeClick() {
