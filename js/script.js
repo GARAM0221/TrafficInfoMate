@@ -113,3 +113,41 @@ function generateKakaoMapLink(currentLat, currentLng, coordinates) {
 
     return baseLink + routeParam;
 }
+
+function getCurrentLocation(callback) {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            console.log("Current location:", position.coords.latitude, position.coords.longitude); // 현재 위치 로그
+            callback(position.coords.latitude, position.coords.longitude);
+        }, function(error) {
+            console.error("Geolocation error:", error.message);
+            callback(null, null);
+        });
+    } else {
+        console.error("Geolocation is not supported by this browser.");
+        callback(null, null);
+    }
+}
+
+function onAnalyzeClick() {
+    getCurrentLocation(function(currentLat, currentLng) {
+        console.log("getCurrentLocation callback - Current location:", currentLat, currentLng); // getCurrentLocation 콜백에서 현재 위치 로그
+
+        if (currentLat != null && currentLng != null) {
+            const coordinates = analyzeMapLink();
+            console.log("Coordinates array:", coordinates); // 좌표 배열 로그
+
+            if (coordinates && coordinates.length > 0) {
+                const kakaoMapLink = generateKakaoMapLink(currentLat, currentLng, coordinates);
+                console.log("Generated link:", kakaoMapLink); // 생성된 링크 로그
+
+                const resultContainer = document.getElementById('linkAnalysisResult');
+                resultContainer.innerHTML = `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
+            } else {
+                alert("링크에서 좌표를 추출할 수 없습니다.");
+            }
+        } else {
+            alert("현재 위치를 가져올 수 없습니다.");
+        }
+    });
+}
