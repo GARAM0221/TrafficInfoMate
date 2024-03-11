@@ -66,15 +66,33 @@ function generateKakaoMapLink(currentLat, currentLng, coordinates) {
 function onAnalyzeClick() {
     getCurrentLocation(function(currentLat, currentLng) {
         if (currentLat != null && currentLng != null) {
-            const coordinates = analyzeMapLink();
-            if (coordinates && coordinates.length > 0) {
-                // 현재 위치(첫 번째 경유지)와 다른 경유지 및 목적지를 포함하여 링크 생성
-                const kakaoMapLink = generateKakaoMapLink(currentLat, currentLng, coordinates);
-                const resultContainer = document.getElementById('linkAnalysisResult');
-                resultContainer.innerHTML = `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
-            } else {
-                alert("링크에서 좌표를 추출할 수 없습니다.");
-            }
+            // 현재 위치의 좌표를 카카오맵의 좌표계로 변환하는 과정을 추가
+            kakao.maps.load(function() {
+                var geocoder = new kakao.maps.services.Geocoder();
+
+                var coord = new kakao.maps.LatLng(currentLat, currentLng);
+                var callback = function(result, status) {
+                    if (status === kakao.maps.services.Status.OK) {
+                        const transformedCurrentLat = result[0].y;
+                        const transformedCurrentLng = result[0].x;
+
+                        // 좌표 변환 성공 후 나머지 로직 처리
+                        const coordinates = analyzeMapLink();
+                        if (coordinates && coordinates.length > 0) {
+                            const kakaoMapLink = generateKakaoMapLink(transformedCurrentLat, transformedCurrentLng, coordinates);
+                            const resultContainer = document.getElementById('linkAnalysisResult');
+                            resultContainer.innerHTML = `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
+                        } else {
+                            alert("링크에서 좌표를 추출할 수 없습니다.");
+                        }
+                    } else {
+                        alert("현재 위치의 좌표 변환에 실패했습니다.");
+                    }
+                };
+
+                // 현재 위치의 WGS84 좌표를 카카오맵 좌표계로 변환
+                geocoder.coord2Address(coord.getLng(), coord.getLat(), callback);
+            });
         } else {
             alert("현재 위치를 가져올 수 없습니다.");
         }
