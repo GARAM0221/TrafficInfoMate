@@ -165,36 +165,29 @@ window.onload = function() {
     showSection('link-analysis');
 };
 
-function getCurrentLocationAndShowOnMap() {
+function getCurrentLocationAndTransform(callback) {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(position) {
             var currentLat = position.coords.latitude;
             var currentLng = position.coords.longitude;
 
-            console.log("현재 위치: ", currentLat, currentLng); // 현재 위치 로그 출력
+            // 변환되기 전의 현재 위치 좌표 로그 출력
+            console.log("변환되기 전 현재 위치: ", currentLat, currentLng);
 
             kakao.maps.load(function() {
-                var mapContainer = document.getElementById('map'), 
-                    mapOption = {
-                        center: new kakao.maps.LatLng(currentLat, currentLng), 
-                        level: 3 
-                    };
-                
-                var map = new kakao.maps.Map(mapContainer, mapOption);
-
                 var geocoder = new kakao.maps.services.Geocoder();
 
+                // WGS84 좌표를 카카오맵 좌표계로 변환
                 geocoder.transCoord(currentLng, currentLat, function(result, status) {
                     if (status === kakao.maps.services.Status.OK) {
-                        console.log("좌표 변환 결과: ", result[0].y, result[0].x); // 좌표 변환 결과 로그 출력
-                        var marker = new kakao.maps.Marker({
-                            position: new kakao.maps.LatLng(result[0].y, result[0].x),
-                            map: map
-                        });
+                        // 변환된 좌표 로그 출력
+                        console.log("변환된 현재 위치 좌표: ", result[0].y, result[0].x);
 
-                        map.setCenter(new kakao.maps.LatLng(result[0].y, result[0].x));
+                        // 변환된 좌표를 callback 함수에 전달
+                        callback(result[0].y, result[0].x);
                     } else {
                         console.error("좌표 변환 실패");
+                        callback(null, null);
                     }
                 }, {
                     input_coord: kakao.maps.services.Coords.WGS84,
@@ -203,11 +196,14 @@ function getCurrentLocationAndShowOnMap() {
             });
         }, function(error) {
             console.error("Geolocation error: ", error.message);
+            callback(null, null);
         });
     } else {
         console.error("Geolocation is not supported by this browser.");
+        callback(null, null);
     }
 }
+
 
 function analyzeMapLink() {
     const mapLink = document.getElementById('mapLinkInput').value;
