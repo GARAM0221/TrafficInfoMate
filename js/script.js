@@ -48,28 +48,28 @@ function getCurrentLocation(callback) {
     }
 }
 
-function generateKakaoMapLink(startLat, startLng, coordinates) {
+function generateKakaoMapLink(currentLat, currentLng, coordinates) {
     let baseLink = "https://map.kakao.com/?map_type=TYPE_MAP&target=car";
-    // 출발지를 현재 위치로 설정합니다.
-    let sParam = `&sX=${startLng}&sY=${startLat}`;
-    let rtParam = "&rt=";
+    let routeParam = "&rt=";
 
-    // coordinates 배열에는 경유지와 목적지의 위도와 경도가 번갈아 가며 저장되어 있음
+    // 첫 번째 경유지로 현재 위치 추가
+    routeParam += `${currentLat},${currentLng}`;
+
+    // 이후 경유지 및 목적지(마지막 좌표)를 rtParam에 추가
     for (let i = 0; i < coordinates.length; i += 2) {
-        if (i > 0) rtParam += ",";
-        rtParam += `${coordinates[i]},${coordinates[i + 1]}`;
+        routeParam += `,${coordinates[i]},${coordinates[i + 1]}`;
     }
 
-    return baseLink + sParam + rtParam;
+    return baseLink + routeParam;
 }
 
 function onAnalyzeClick() {
-    getCurrentLocation(function(lat, lng) {
-        if (lat != null && lng != null) {
-            // 현재 위치가 정상적으로 얻어진 경우
-            const coordinates = analyzeMapLink(); // 이 함수는 페이지에서 입력된 링크를 분석하여 경유지와 목적지의 좌표 배열을 반환합니다.
-            if(coordinates && coordinates.length > 0) {
-                const kakaoMapLink = generateKakaoMapLink(lat, lng, coordinates);
+    getCurrentLocation(function(currentLat, currentLng) {
+        if (currentLat != null && currentLng != null) {
+            const coordinates = analyzeMapLink();
+            if (coordinates && coordinates.length > 0) {
+                // 현재 위치(첫 번째 경유지)와 다른 경유지 및 목적지를 포함하여 링크 생성
+                const kakaoMapLink = generateKakaoMapLink(currentLat, currentLng, coordinates);
                 const resultContainer = document.getElementById('linkAnalysisResult');
                 resultContainer.innerHTML = `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
             } else {
