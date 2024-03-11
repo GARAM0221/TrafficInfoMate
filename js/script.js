@@ -22,14 +22,11 @@ function getCurrentLocationAndTransformToTM(callback) {
             kakao.maps.load(function() {
                 var geocoder = new kakao.maps.services.Geocoder();
 
-                // 올바른 순서로 WGS84 좌표를 TM 좌표계로 변환
+                // WGS84 좌표를 TM 좌표계로 변환
                 geocoder.transCoord(currentLng, currentLat, function(result, status) {
                     if (status === kakao.maps.services.Status.OK) {
-                        var transformedTMx = result[0].x;
-                        var transformedTMy = result[0].y;
-
-                        console.log("변환된 TM 좌표:", transformedTMx, transformedTMy);
-                        callback(transformedTMx, transformedTMy);
+                        // 변환된 TM 좌표의 x, y를 올바른 순서로 콜백에 전달합니다.
+                        callback(result[0].y, result[0].x);
                     } else {
                         console.error("좌표 변환 실패");
                         callback(null, null);
@@ -49,45 +46,27 @@ function getCurrentLocationAndTransformToTM(callback) {
     }
 }
 
-function analyzeMapLink() {
-    const mapLink = document.getElementById('mapLinkInput').value;
-    const linkParts = mapLink.split('&');
-    let coordinates = [];
-
-    linkParts.forEach(part => {
-        if (part.startsWith('rt=')) {
-            const coordsPart = part.substring(3).replace(/%20/g, ' ').split(',');
-            for (let i = 0; i < coordsPart.length; i += 2) {
-                coordinates.push([parseFloat(coordsPart[i]), parseFloat(coordsPart[i + 1])]);
-            }
-        }
-    });
-
-    return coordinates.flat();
-}
-
-function generateKakaoMapLink(tmX, tmY, coordinates) {
-    let baseLink = "https://map.kakao.com/?map_type=TYPE_MAP&target=car";
-    let rtParam = "&rt=";
-
-    // 변환된 TM 좌표를 링크 생성에 사용
-    rtParam += `${tmX},${tmY},`;
+function generateKakaoMapLink(transformedTMy, transformedTMx, coordinates) {
+    let baseLink = "https://map.kakao.com/?map_type=TYPE_MAP&target=car&rt=";
+    // 변환된 TM 좌표를 맨 앞에 추가합니다.
+    baseLink += `${transformedTMy},${transformedTMx},`;
 
     for (let i = 0; i < coordinates.length; i += 2) {
-        rtParam += `${coordinates[i]},${coordinates[i + 1]},`;
+        baseLink += `${coordinates[i]},${coordinates[i + 1]},`;
     }
 
-    rtParam = rtParam.slice(0, -1); // 마지막 콤마 제거
+    baseLink = baseLink.slice(0, -1); // 마지막 콤마 제거
 
-    return baseLink + rtParam;
+    return baseLink;
 }
 
 function onAnalyzeClick() {
-    getCurrentLocationAndTransformToTM(function(transformedTMx, transformedTMy) {
-        if (transformedTMx != null && transformedTMy != null) {
+    getCurrentLocationAndTransformToTM(function(transformedTMy, transformedTMx) {
+        if (transformedTMy != null && transformedTMx != null) {
             const coordinates = analyzeMapLink();
             if (coordinates && coordinates.length > 0) {
-                const kakaoMapLink = generateKakaoMapLink(transformedTMx, transformedTMy, coordinates);
+                // 변환된 TM 좌표를 사용하여 링크를 생성합니다.
+                const kakaoMapLink = generateKakaoMapLink(transformedTMy, transformedTMx, coordinates);
                 const resultContainer = document.getElementById('linkAnalysisResult');
                 resultContainer.innerHTML = `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
             } else {
