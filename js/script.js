@@ -32,7 +32,7 @@ function getCurrentLocationAndTransformToTM(callback) {
 
                         // 변환된 TM 좌표를 사용하는 로직 (예: 콜백 함수 호출)
                         console.log("변환된 TM 좌표:", transformedTMx, transformedTMy);
-                        callback(transformedTMx, transformedTMy);
+                        callback(transformedTMy, transformedTMx);
                     } else {
                         console.error("좌표 변환 실패");
                         callback(null, null);
