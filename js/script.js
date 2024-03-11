@@ -1,132 +1,57 @@
 function showSection(sectionId) {
     var sections = document.querySelectorAll('.feature-section');
     sections.forEach(function(section) {
-        if (section.id === sectionId) {
-            section.classList.add('active');
-        } else {
-            section.classList.remove('active');
-        }
+        section.style.display = section.id === sectionId ? 'block' : 'none';
     });
 }
 
-// 페이지 로드 시 첫 번째 섹션을 기본적으로 활성화합니다.
 window.onload = function() {
-    showSection('link-analysis'); // 기본적으로 첫 번째 기능을 보여줍니다.
+    showSection('link-analysis');
 };
 
 function analyzeMapLink() {
     const mapLink = document.getElementById('mapLinkInput').value;
-    const linkParts = mapLink.split('&');
-    let coordinates = [];
-
-    linkParts.forEach(part => {
-        if (part.startsWith('rt=')) {
-            // %20을 공백으로 치환합니다.
-            const coordsPart = part.substring(3).replace(/%20/g, ' ').split(',');
-            // 좌표를 배열에 추가합니다.
-            for (let i = 0; i < coordsPart.length; i += 2) {
-                coordinates.push([parseFloat(coordsPart[i]), parseFloat(coordsPart[i + 1])]);
-            }
-        }
-    });
-
-    // 함수가 좌표 배열을 반환하도록 수정합니다.
-    return coordinates.flat(); // 평탄화하여 반환
+    let coordinates = mapLink.match(/rt=([^&]+)/)[1].split(',').map(coord => parseFloat(coord));
+    return coordinates; // 경도와 위도의 배열을 반환
 }
 
-function getCurrentLocation(callback) {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-            callback(position.coords.latitude, position.coords.longitude);
-        }, function(error) {
-            console.error("Geolocation error: " + error.message);
-            callback(null, null);
-        });
-    } else {
-        console.error("Geolocation is not supported by this browser.");
-        callback(null, null);
-    }
-}
-
-function generateKakaoMapLink(startLat, startLng, coordinates) {
-    let baseLink = "https://map.kakao.com/?map_type=TYPE_MAP&target=car";
-    
-    // Initialize the route parameter with the start location
-    let rtParam = `&sX=${startLng}&sY=${startLat}`;
-
-    // Append each waypoint to the route parameter
-    coordinates.forEach((coord, index) => {
-        rtParam += `,${coord[0]},${coord[1]}`; // Add each coordinate pair to the route
-    });
-
-    // Finalize the link by combining the base URL with the route parameter
-    const finalLink = baseLink + rtParam;
-    
-    console.log("Generated link:", finalLink); // Log the generated link for debugging
-    return finalLink;
-}
-
-
-
-
-function onAnalyzeClick() {
-    getCurrentLocation(function(lat, lng) {
-        if (lat != null && lng != null) {
-            const coordinates = analyzeMapLink(); // This function analyzes the input link and returns coordinates array
-            if(coordinates && coordinates.length > 0) {
-                const kakaoMapLink = generateKakaoMapLink(lat, lng, coordinates);
-                const resultContainer = document.getElementById('linkAnalysisResult');
-                resultContainer.innerHTML = `<p><a href="${kakaoMapLink}" target="_blank">View route on KakaoMap</a></p>`;
-            } else {
-                alert("Unable to extract coordinates from the link.");
-            }
+function getCurrentLocation() {
+    return new Promise((resolve, reject) => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                resolve({
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                });
+            }, error => {
+                reject("Geolocation error: " + error.message);
+            });
         } else {
-            alert("Unable to access current location.");
+            reject("Geolocation is not supported by this browser.");
         }
     });
 }
 
+async function onAnalyzeClick() {
+    try {
+        const {lat, lng} = await getCurrentLocation();
+        const coordinates = analyzeMapLink();
 
-function analyzeMapLink() {
-    const mapLink = document.getElementById('mapLinkInput').value;
-    const linkParts = mapLink.split('&');
-    let coordinates = [];
-
-    linkParts.forEach(part => {
-        if (part.startsWith('rt=')) {
-            const coordsPart = part.substring(3).replace(/%20/g, ' ').split(',');
-            for (let i = 0; i < coordsPart.length; i += 2) {
-                coordinates.push([parseFloat(coordsPart[i]), parseFloat(coordsPart[i + 1])]);
-            }
+        if (coordinates.length > 0) {
+            const kakaoMapLink = generateKakaoMapLink(lat, lng, coordinates);
+            document.getElementById('linkAnalysisResult').innerHTML = `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
+        } else {
+            alert("링크에서 좌표를 추출할 수 없습니다.");
         }
-    });
-
-    console.log("Coordinates array:", coordinates); // 배열 확인 로그
-    return coordinates.flat(); // 평탄화하여 반환
-}
-
-function getCurrentLocation(callback) {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-            console.log("Current location:", position.coords.latitude, position.coords.longitude); // 현재 위치 로그
-            callback(position.coords.latitude, position.coords.longitude);
-        }, function(error) {
-            console.error("Geolocation error:", error.message);
-            callback(null, null);
-        });
-    } else {
-        console.error("Geolocation is not supported by this browser.");
-        callback(null, null);
+    } catch (error) {
+        alert(error);
     }
 }
 
-function generateKakaoMapLink(startLat, startLng, coordinates) {
+function generateKakaoMapLink(lat, lng, coordinates) {
     let baseLink = "https://map.kakao.com/?map_type=TYPE_MAP&target=car";
-    let routeLink = "&rt=";
-    // 출발지와 경유지, 목적지 좌표를 rt 파라미터로 추가
-    // 여기서 좌표 추가 로직 구현
-    // 예시 로그
-    const finalLink = baseLink + routeLink;
-    console.log("Generated link:", finalLink); // 생성된 링크 로그
-    return finalLink;
+    let rtParam = `&rt=${coordinates.join(',')}`;
+    let sParam = `&sX=${lng}&sY=${lat}`; // 현재 위치를 출발지로 설정
+
+    return `${baseLink}${sParam}${rtParam}`;
 }
