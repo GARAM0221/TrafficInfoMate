@@ -13,6 +13,57 @@ window.onload = function() {
     showSection('link-analysis');
 };
 
+// 현재 위치를 얻어와서 카카오맵의 좌표계로 변환 후, 결과를 지도 상에 마커로 표시하는 함수
+function getCurrentLocationAndShowOnMap() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            // 현재 위치의 WGS84 좌표
+            var currentLat = position.coords.latitude;
+            var currentLng = position.coords.longitude;
+
+            // 카카오맵 API 로드
+            kakao.maps.load(function() {
+                // 지도 옵션 설정
+                var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+                    mapOption = {
+                        center: new kakao.maps.LatLng(currentLat, currentLng), // 지도의 중심좌표
+                        level: 3 // 지도의 확대 레벨
+                    };
+                
+                // 지도 생성
+                var map = new kakao.maps.Map(mapContainer, mapOption);
+
+                // 좌표계 변환 객체 생성
+                var geocoder = new kakao.maps.services.Geocoder();
+
+                // WGS84 좌표를 카카오맵 좌표계로 변환
+                geocoder.transCoord(currentLng, currentLat, function(result, status) {
+                    if (status === kakao.maps.services.Status.OK) {
+                        // 변환된 좌표로 마커 생성
+                        var marker = new kakao.maps.Marker({
+                            position: new kakao.maps.LatLng(result[0].y, result[0].x),
+                            map: map
+                        });
+
+                        // 지도 중심을 변환된 좌표로 이동
+                        map.setCenter(new kakao.maps.LatLng(result[0].y, result[0].x));
+                    } else {
+                        console.error("좌표 변환 실패");
+                    }
+                }, {
+                    input_coord: kakao.maps.services.Coords.WGS84,
+                    output_coord: kakao.maps.services.Coords.WCONGNAMUL
+                });
+            });
+        }, function(error) {
+            console.error("Geolocation error: ", error.message);
+        });
+    } else {
+        console.error("Geolocation is not supported by this browser.");
+    }
+}
+
+
 function analyzeMapLink() {
     const mapLink = document.getElementById('mapLinkInput').value;
     const linkParts = mapLink.split('&');
@@ -35,9 +86,25 @@ function getCurrentLocationAndTransform(callback) {
         navigator.geolocation.getCurrentPosition(function(position) {
             var currentLat = position.coords.latitude;
             var currentLng = position.coords.longitude;
-            // 변환 작업은 여기서 진행하거나, 현재 위치를 바로 반환할 수도 있습니다.
-            // 변환 작업이 필요한 경우 여기에 추가하세요.
-            callback(currentLat, currentLng);
+
+            // 카카오맵 API 로드
+            kakao.maps.load(function() {
+                var geocoder = new kakao.maps.services.Geocoder();
+
+                // WGS84 좌표를 카카오맵 좌표계로 변환
+                geocoder.transCoord(currentLng, currentLat, function(result, status) {
+                    if (status === kakao.maps.services.Status.OK) {
+                        // 변환된 좌표로 콜백 함수 호출
+                        callback(result[0].y, result[0].x);
+                    } else {
+                        console.error("좌표 변환 실패");
+                        callback(null, null);
+                    }
+                }, {
+                    input_coord: kakao.maps.services.Coords.WGS84,
+                    output_coord: kakao.maps.services.Coords.WCONGNAMUL
+                });
+            });
         }, function(error) {
             console.error("Geolocation error: " + error.message);
             callback(null, null);
@@ -47,6 +114,7 @@ function getCurrentLocationAndTransform(callback) {
         callback(null, null);
     }
 }
+
 
 function generateKakaoMapLink(currentLat, currentLng, coordinates) {
     let baseLink = "https://map.kakao.com/?map_type=TYPE_MAP&target=car";
