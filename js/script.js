@@ -63,10 +63,10 @@ function analyzeMapLink() {
     return coordinates.flat();
 }
 
-function generateKakaoMapLink(transformedTMy, transformedTMx, coordinates) {
+function generateKakaoMapLink(transformedTMx, transformedTMy, coordinates) {
     let baseLink = "https://map.kakao.com/?map_type=TYPE_MAP&target=car&rt=";
     // 변환된 TM 좌표를 맨 앞에 추가합니다.
-    baseLink += `${transformedTMy},${transformedTMx},`;
+    baseLink += `${transformedTMx},${transformedTMy},`;
 
     for (let i = 0; i < coordinates.length; i += 2) {
         baseLink += `${coordinates[i]},${coordinates[i + 1]},`;
@@ -78,8 +78,8 @@ function generateKakaoMapLink(transformedTMy, transformedTMx, coordinates) {
 }
 
 function onAnalyzeClick() {
-    getCurrentLocationAndTransformToTM(function(transformedTMy, transformedTMx) {
-        if (transformedTMy != null && transformedTMx != null) {
+    getCurrentLocationAndTransformToTM(function(transformedTMx, transformedTMy) {
+        if (transformedTMx != null && transformedTMy != null) {
             const coordinates = analyzeMapLink();
             if (coordinates && coordinates.length > 0) {
                 // 변환된 TM 좌표를 사용하여 링크를 생성합니다.
