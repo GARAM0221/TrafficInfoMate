@@ -24,7 +24,7 @@ function getCurrentLocationAndTransformToTM(callback) {
                 var geocoder = new kakao.maps.services.Geocoder();
 
                 // WGS84 좌표를 TM 좌표계로 변환
-                geocoder.transCoord(tmY, tmX, function(result, status) {
+                geocoder.transCoord(tmX, tmY, function(result, status) {
                     if (status === kakao.maps.services.Status.OK) {
                         // 변환된 TM 좌표
                         var transformedTMx = result[0].x;
