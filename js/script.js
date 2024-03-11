@@ -50,39 +50,42 @@ function getCurrentLocation(callback) {
 
 function generateKakaoMapLink(startLat, startLng, coordinates) {
     let baseLink = "https://map.kakao.com/?map_type=TYPE_MAP&target=car";
-    let routeLink = "&rt=";
+    
+    // Initialize the route parameter with the start location
+    let rtParam = `&sX=${startLng}&sY=${startLat}`;
 
-    // coordinates 배열에는 경유지와 목적지의 위도와 경도가 번갈아 가며 저장되어 있음
+    // Append each waypoint to the route parameter
     coordinates.forEach((coord, index) => {
-        if(index > 0) routeLink += ","; // 첫 번째 좌표가 아니라면 콤마로 구분
-        routeLink += `${coord[0]},${coord[1]}`; // coord[0]은 위도, coord[1]은 경도
+        rtParam += `,${coord[0]},${coord[1]}`; // Add each coordinate pair to the route
     });
 
-    // 현재 위치를 출발지로 설정합니다.
-    let sParam = `&sX=${startLng}&sY=${startLat}`;
-
-    return baseLink + sParam + routeLink; // 수정: sParam과 routeLink를 올바르게 연결
+    // Finalize the link by combining the base URL with the route parameter
+    const finalLink = baseLink + rtParam;
+    
+    console.log("Generated link:", finalLink); // Log the generated link for debugging
+    return finalLink;
 }
+
 
 
 
 function onAnalyzeClick() {
     getCurrentLocation(function(lat, lng) {
         if (lat != null && lng != null) {
-            // 현재 위치가 정상적으로 얻어진 경우
-            const coordinates = analyzeMapLink(); // 이 함수는 페이지에서 입력된 링크를 분석하여 경유지와 목적지의 좌표 배열을 반환합니다.
+            const coordinates = analyzeMapLink(); // This function analyzes the input link and returns coordinates array
             if(coordinates && coordinates.length > 0) {
                 const kakaoMapLink = generateKakaoMapLink(lat, lng, coordinates);
                 const resultContainer = document.getElementById('linkAnalysisResult');
-                resultContainer.innerHTML = `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
+                resultContainer.innerHTML = `<p><a href="${kakaoMapLink}" target="_blank">View route on KakaoMap</a></p>`;
             } else {
-                alert("링크에서 좌표를 추출할 수 없습니다.");
+                alert("Unable to extract coordinates from the link.");
             }
         } else {
-            alert("현재 위치를 가져올 수 없습니다.");
+            alert("Unable to access current location.");
         }
     });
 }
+
 
 function analyzeMapLink() {
     const mapLink = document.getElementById('mapLinkInput').value;
