@@ -243,3 +243,135 @@ function onAnalyzeClick() {
         }
     });
 }
+
+function getCurrentLocationAndTransform(callback) {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            var currentLat = position.coords.latitude;
+            var currentLng = position.coords.longitude;
+
+            console.log("변환되기 전 현재 위치: ", currentLat, currentLng); // 변환되기 전의 현재 위치 좌표 로그 출력
+
+            kakao.maps.load(function() {
+                var geocoder = new kakao.maps.services.Geocoder();
+
+                // WGS84 좌표를 카카오맵 좌표계로 변환
+                geocoder.transCoord(currentLng, currentLat, function(result, status) {
+                    if (status === kakao.maps.services.Status.OK) {
+                        // 변환된 좌표 로그 출력
+                        console.log("변환된 현재 위치 좌표: ", result[0].y, result[0].x);
+
+                        callback(result[0].y, result[0].x); // 변환된 좌표를 callback 함수에 전달
+                    } else {
+                        console.error("좌표 변환 실패");
+                        callback(null, null);
+                    }
+                }, {
+                    input_coord: kakao.maps.services.Coords.WGS84,
+                    output_coord: kakao.maps.services.Coords.WCONGNAMUL
+                });
+            });
+        }, function(error) {
+            console.error("Geolocation error: ", error.message);
+            callback(null, null);
+        });
+    } else {
+        console.error("Geolocation is not supported by this browser.");
+        callback(null, null);
+    }
+}
+
+function onAnalyzeClick() {
+    getCurrentLocationAndTransform(function(transformedLat, transformedLng) {
+        console.log("변환된 현재 위치 좌표: ", transformedLat, transformedLng); // 변환된 현재 위치 좌표 로그 출력
+
+        const coordinates = analyzeMapLink();
+        console.log("분석된 링크 좌표: ", coordinates); // 분석된 링크 좌표 로그 출력
+
+        if (coordinates && coordinates.length > 0) {
+            const kakaoMapLink = generateKakaoMapLink(transformedLat, transformedLng, coordinates);
+            console.log("생성된 카카오맵 링크: ", kakaoMapLink); // 생성된 카카오맵 링크 로그 출력
+
+            const resultContainer = document.getElementById('linkAnalysisResult');
+            resultContainer.innerHTML = `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
+        } else {
+            alert("링크에서 좌표를 추출할 수 없습니다.");
+        }
+    });
+}
+
+// 현재 위치를 얻어와서 카카오맵의 좌표계로 변환하는 함수
+function getCurrentLocationAndTransform() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            // 현재 위치의 WGS84 좌표
+            var currentLat = position.coords.latitude;
+            var currentLng = position.coords.longitude;
+
+            // 카카오맵 API 로드
+            kakao.maps.load(function() {
+                // 좌표계 변환 객체 생성
+                var geocoder = new kakao.maps.services.Geocoder();
+
+                // WGS84 좌표를 카카오맵 좌표계로 변환
+                geocoder.transCoord(currentLng, currentLat, function(result, status) {
+                    if (status === kakao.maps.services.Status.OK) {
+                        // 변환된 좌표
+                        var transformedLat = result[0].y;
+                        var transformedLng = result[0].x;
+
+                        // 변환된 좌표 사용 예: 변환된 좌표로 지도 중심 이동, 마커 표시 등
+                        console.log("변환된 위도:", transformedLat, "변환된 경도:", transformedLng);
+                    } else {
+                        console.error("좌표 변환 실패");
+                    }
+                }, {
+                    input_coord: kakao.maps.services.Coords.WGS84,
+                    output_coord: kakao.maps.services.Coords.WCONGNAMUL // 또는 다른 카카오맵 지원 좌표계
+                });
+            });
+        }, function(error) {
+            console.error("Geolocation error: ", error.message);
+        });
+    } else {
+        console.error("Geolocation is not supported by this browser.");
+    }
+}
+
+// 함수 실행 예
+getCurrentLocationAndTransform();
+
+function getCurrentLocationAndTransform(callback) {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            var currentLat = position.coords.latitude;
+            var currentLng = position.coords.longitude;
+
+            console.log("변환되기 전 현재 위치: ", currentLat, currentLng); // 변환되기 전의 현재 위치 좌표 로그 출력
+
+            kakao.maps.load(function() {
+                var geocoder = new kakao.maps.services.Geocoder();
+
+                geocoder.transCoord(currentLng, currentLat, function(result, status) {
+                    if (status === kakao.maps.services.Status.OK) {
+                        console.log("변환된 현재 위치 좌표: ", result[0].y, result[0].x); // 변환된 좌표 로그 출력
+
+                        callback(result[0].y, result[0].x); // 변환된 좌표를 callback 함수에 전달
+                    } else {
+                        console.error("좌표 변환 실패");
+                        callback(null, null);
+                    }
+                }, {
+                    input_coord: kakao.maps.services.Coords.WGS84,
+                    output_coord: kakao.maps.services.Coords.WCONGNAMUL
+                });
+            });
+        }, function(error) {
+            console.error("Geolocation error: ", error.message);
+            callback(null, null);
+        });
+    } else {
+        console.error("Geolocation is not supported by this browser.");
+        callback(null, null);
+    }
+}
