@@ -74,24 +74,25 @@ function getCurrentLocationAndTransform(callback) {
             var currentLat = position.coords.latitude;
             var currentLng = position.coords.longitude;
 
-            // 카카오맵 API 로드
             kakao.maps.load(function() {
                 var geocoder = new kakao.maps.services.Geocoder();
 
-                // WGS84 좌표를 카카오맵의 좌표계로 변환
-                var coord = new kakao.maps.LatLng(currentLat, currentLng);
-                geocoder.coord2Address(coord.getLng(), coord.getLat(), function(result, status) {
+                geocoder.transCoord(currentLng, currentLat, function(result, status) {
                     if (status === kakao.maps.services.Status.OK) {
-                        // 변환된 좌표를 callback 함수에 전달
-                        callback(result[0].x, result[0].y);
+                        var transformedLat = result[0].y;
+                        var transformedLng = result[0].x;
+                        callback(transformedLat, transformedLng);
                     } else {
                         console.error("좌표 변환 실패");
                         callback(null, null);
                     }
+                }, {
+                    input_coord: kakao.maps.services.Coords.WGS84,
+                    output_coord: kakao.maps.services.Coords.WCONGNAMUL
                 });
             });
         }, function(error) {
-            console.error("Geolocation error: " + error.message);
+            console.error("Geolocation error:", error.message);
             callback(null, null);
         });
     } else {
@@ -101,55 +102,31 @@ function getCurrentLocationAndTransform(callback) {
 }
 
 function onAnalyzeClick() {
-    getCurrentLocation(function(currentLat, currentLng) {
-        if (currentLat != null && currentLng != null) {
-            kakao.maps.load(function() {
-                var geocoder = new kakao.maps.services.Geocoder();
-
-                var coord = new kakao.maps.LatLng(currentLat, currentLng);
-                var callback = function(result, status) {
-                    if (status === kakao.maps.services.Status.OK) {
-                        // 변환된 현재 위치 좌표
-                        const transformedCurrentLat = result[0].y;
-                        const transformedCurrentLng = result[0].x;
-
-                        // 링크 분석 및 좌표 변환
-                        const coordinates = analyzeMapLink();
-                        if (coordinates && coordinates.length > 0) {
-                            // 변환된 현재 위치 좌표와 기타 경유지 및 목적지 좌표를 포함하여 링크 생성
-                            const kakaoMapLink = generateKakaoMapLink(transformedCurrentLat, transformedCurrentLng, coordinates);
-                            const resultContainer = document.getElementById('linkAnalysisResult');
-                            resultContainer.innerHTML = `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
-                        } else {
-                            alert("링크에서 좌표를 추출할 수 없습니다.");
-                        }
-                    } else {
-                        alert("현재 위치의 좌표 변환에 실패했습니다.");
-                    }
-                };
-
-                // 현재 위치의 WGS84 좌표를 카카오맵 좌표계로 변환
-                geocoder.coord2Address(coord.getLng(), coord.getLat(), callback);
-            });
+    getCurrentLocationAndTransform(function(transformedLat, transformedLng) {
+        if (transformedLat != null && transformedLng != null) {
+            // 변환된 현재 위치의 좌표와 링크 분석 결과를 사용하여 경로 링크 생성
+            const coordinates = analyzeMapLink(); // 이전 단계와 동일
+            coordinates.unshift(transformedLng, transformedLat); // 변환된 현재 위치를 경유지 목록 맨 앞에 추가
+            const kakaoMapLink = generateKakaoMapLink(coordinates); // 수정된 generateKakaoMapLink 함수 사용
+            const resultContainer = document.getElementById('linkAnalysisResult');
+            resultContainer.innerHTML = `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
         } else {
             alert("현재 위치를 가져올 수 없습니다.");
         }
     });
 }
 
-// 이전의 generateKakaoMapLink 함수에서는 현재 위치를 링크의 첫 경유지로 추가하는 로직을 제거해야 합니다.
-function generateKakaoMapLink(currentLat, currentLng, coordinates) {
-    let baseLink = "https://map.kakao.com/?map_type=TYPE_MAP&target=car";
-    let routeParam = `&sX=${currentLng}&sY=${currentLat}&rt=`;
-
-    // 경유지 및 목적지 좌표를 rtParam에 추가
+// 수정된 generateKakaoMapLink 함수: 출발지 파라미터 제거, 첫 경유지가 출발지 역할을 함
+function generateKakaoMapLink(coordinates) {
+    let baseLink = "https://map.kakao.com/?map_type=TYPE_MAP&target=car&rt=";
+    // coordinates 배열에 첫 번째 경유지(출발지)부터 모든 경유지 및 목적지 좌표 추가
     for (let i = 0; i < coordinates.length; i += 2) {
-        if (i > 0) routeParam += `,`;
-        routeParam += `${coordinates[i]},${coordinates[i + 1]}`;
+        if (i > 0) baseLink += ",";
+        baseLink += `${coordinates[i]},${coordinates[i + 1]}`;
     }
-
-    return baseLink + routeParam;
+    return baseLink;
 }
+
 
 function getCurrentLocation(callback) {
     if (navigator.geolocation) {
