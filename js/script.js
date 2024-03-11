@@ -69,7 +69,6 @@ function onAnalyzeClick() {
             // 현재 위치가 정상적으로 얻어진 경우
             const coordinates = analyzeMapLink(); // 이 함수는 페이지에서 입력된 링크를 분석하여 경유지와 목적지의 좌표 배열을 반환합니다.
             if(coordinates && coordinates.length > 0) {
-                // 현재 위치(위도와 경도)를 출발지로 설정하여 카카오맵 링크 생성
                 const kakaoMapLink = generateKakaoMapLink(lat, lng, coordinates);
                 const resultContainer = document.getElementById('linkAnalysisResult');
                 resultContainer.innerHTML = `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
@@ -80,4 +79,48 @@ function onAnalyzeClick() {
             alert("현재 위치를 가져올 수 없습니다.");
         }
     });
+}
+
+function analyzeMapLink() {
+    const mapLink = document.getElementById('mapLinkInput').value;
+    const linkParts = mapLink.split('&');
+    let coordinates = [];
+
+    linkParts.forEach(part => {
+        if (part.startsWith('rt=')) {
+            const coordsPart = part.substring(3).replace(/%20/g, ' ').split(',');
+            for (let i = 0; i < coordsPart.length; i += 2) {
+                coordinates.push([parseFloat(coordsPart[i]), parseFloat(coordsPart[i + 1])]);
+            }
+        }
+    });
+
+    console.log("Coordinates array:", coordinates); // 배열 확인 로그
+    return coordinates.flat(); // 평탄화하여 반환
+}
+
+function getCurrentLocation(callback) {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            console.log("Current location:", position.coords.latitude, position.coords.longitude); // 현재 위치 로그
+            callback(position.coords.latitude, position.coords.longitude);
+        }, function(error) {
+            console.error("Geolocation error:", error.message);
+            callback(null, null);
+        });
+    } else {
+        console.error("Geolocation is not supported by this browser.");
+        callback(null, null);
+    }
+}
+
+function generateKakaoMapLink(startLat, startLng, coordinates) {
+    let baseLink = "https://map.kakao.com/?map_type=TYPE_MAP&target=car";
+    let routeLink = "&rt=";
+    // 출발지와 경유지, 목적지 좌표를 rt 파라미터로 추가
+    // 여기서 좌표 추가 로직 구현
+    // 예시 로그
+    const finalLink = baseLink + routeLink;
+    console.log("Generated link:", finalLink); // 생성된 링크 로그
+    return finalLink;
 }
