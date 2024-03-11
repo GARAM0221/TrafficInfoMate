@@ -83,7 +83,7 @@ function onAnalyzeClick() {
             const coordinates = analyzeMapLink();
             if (coordinates && coordinates.length > 0) {
                 // 변환된 TM 좌표를 사용하여 링크를 생성합니다.
-                const kakaoMapLink = generateKakaoMapLink(transformedTMy, transformedTMx, coordinates);
+                const kakaoMapLink = generateKakaoMapLink(transformedTMx, transformedTMy, coordinates);
                 const resultContainer = document.getElementById('linkAnalysisResult');
                 resultContainer.innerHTML = `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
             } else {
