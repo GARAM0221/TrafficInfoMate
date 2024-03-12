@@ -18,15 +18,15 @@ function getCurrentLocationAndTransformToTM(callback) {
         navigator.geolocation.getCurrentPosition(function(position) {
             var currentLat = position.coords.latitude;
             var currentLng = position.coords.longitude;
+            console.log("현재 위치(WGS84): ", currentLat, currentLng); // 현재 위치 로그
 
             kakao.maps.load(function() {
                 var geocoder = new kakao.maps.services.Geocoder();
 
-                // WGS84 좌표를 TM 좌표계로 변환
                 geocoder.transCoord(currentLng, currentLat, function(result, status) {
                     if (status === kakao.maps.services.Status.OK) {
-                        // 변환된 TM 좌표의 x, y를 올바른 순서로 콜백에 전달합니다.
-                        callback(result[0].y, result[0].x);
+                        console.log("변환된 TM 좌표: ", result[0].x, result[0].y); // 변환된 TM 좌표 로그
+                        callback(result[0].y, result[0].x); // 순서 주의
                     } else {
                         console.error("좌표 변환 실패");
                         callback(null, null);
@@ -37,14 +37,13 @@ function getCurrentLocationAndTransformToTM(callback) {
                 });
             });
         }, function(error) {
-            console.error("Geolocation error:", error.message);
-            callback(null, null);
+            console.error("Geolocation error: ", error.message);
         });
     } else {
         console.error("Geolocation is not supported by this browser.");
-        callback(null, null);
     }
 }
+
 
 function analyzeMapLink() {
     const mapLink = document.getElementById('mapLinkInput').value;
@@ -94,3 +93,4 @@ function onAnalyzeClick() {
         }
     });
 }
+
