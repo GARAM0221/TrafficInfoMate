@@ -1,74 +1,52 @@
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Arial', sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f4f4f4;
-    color: #333;
-}
-
-nav {
-    background-color: #004a99;
-    padding: 10px 0;
+    background: #f5f5f5;
 }
 
 nav ul {
-    list-style-type: none;
+    list-style: none;
     padding: 0;
-    text-align: center;
+    display: flex;
+    justify-content: center;
+    background-color: #333;
 }
 
 nav ul li {
-    display: inline;
-    margin-right: 20px;
+    margin: 10px;
 }
 
-nav ul li a {
+nav ul li button {
+    background-color: #444;
     color: white;
-    text-decoration: none;
-    padding: 10px 15px;
-    font-weight: bold;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
 }
 
-nav ul li a:hover,
-nav ul li a:focus {
-    background-color: #0073e6;
-    border-radius: 5px;
+nav ul li button:hover {
+    background-color: #555;
 }
 
 .feature-section {
-    display: none;
+    display: none; /* 기본적으로는 모든 섹션을 숨깁니다. */
     padding: 20px;
-    margin-top: 20px;
     background-color: white;
-    border-radius: 8px;
+    margin: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
 }
 
 .feature-section.active {
-    display: block;
+    display: block; /* 활성화된 섹션만 보여줍니다. */
 }
 
-button {
-    background-color: #007bff;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
+#roadview {
+    height: 400px; /* 로드뷰 컨테이너의 높이를 지정합니다. */
 }
 
-button:hover {
-    background-color: #0056b3;
-}
-
-input[type="text"] {
-    padding: 10px;
-    margin: 10px 0;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-    width: calc(100% - 24px);
+#roadviewTitle {
+    margin-bottom: 10px;
+    font-size: 18px;
+    font-weight: bold;
 }
