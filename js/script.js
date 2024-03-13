@@ -13,30 +13,29 @@ window.onload = function() {
     showSection('link-analysis');
 };
 
-function getCurrentLocationAndTransformToUTMK(callback) {
+function getCurrentLocationAndTransformToWCONGNAMUL(callback) {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(position) {
             var currentLat = position.coords.latitude;
             var currentLng = position.coords.longitude;
             console.log("현재 위치(WGS84): ", currentLat, currentLng); // 현재 위치 로그
 
-            // Flask 앱에 좌표 변환 요청 보내기
-            fetch("https://trafficinfo-9ec9b31d0db9.herokuapp.com/convert", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    "longitude": currentLng,
-                    "latitude": currentLat
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log("변환된 UTM-K 좌표: ", data.utm_x, data.utm_y); // 변환된 UTM-K 좌표 로그
-                callback(data.utm_x, data.utm_y); // 변환된 좌표를 콜백 함수로 전달
-            })
-            .catch(error => console.error("좌표 변환 실패: ", error));
+            kakao.maps.load(function() {
+                var geocoder = new kakao.maps.services.Geocoder();
+
+                geocoder.transCoord(currentLng, currentLat, function(result, status) {
+                    if (status === kakao.maps.services.Status.OK) {
+                        console.log("변환된 WCONGNAMUL 좌표: ", result[0].x, result[0].y); // 변환된 WCONGNAMUL 좌표 로그
+                        callback(result[0].x, result[0].y); // 순서 주의: X, Y
+                    } else {
+                        console.error("좌표 변환 실패");
+                        callback(null, null);
+                    }
+                }, {
+                    input_coord: kakao.maps.services.Coords.WGS84,
+                    output_coord: kakao.maps.services.Coords.WCONGNAMUL // 변경된 부분
+                });
+            });
         }, function(error) {
             console.error("Geolocation error: ", error.message);
         });
@@ -44,7 +43,6 @@ function getCurrentLocationAndTransformToUTMK(callback) {
         console.error("Geolocation is not supported by this browser.");
     }
 }
-
 
 function analyzeMapLink() {
     const mapLink = document.getElementById('mapLinkInput').value;
@@ -63,10 +61,10 @@ function analyzeMapLink() {
     return coordinates.flat();
 }
 
-function generateKakaoMapLink(transformedTMx, transformedTMy, coordinates) {
+function generateKakaoMapLink(transformedWCONGNAMULx, transformedWCONGNAMULy, coordinates) {
     let baseLink = "https://map.kakao.com/?map_type=TYPE_MAP&target=car&rt=";
-    // 변환된 TM 좌표를 맨 앞에 추가합니다.
-    baseLink += `${transformedTMx},${transformedTMy},`;
+    // 변환된 WCONGNAMUL 좌표를 맨 앞에 추가합니다.
+    baseLink += `${transformedWCONGNAMULx},${transformedWCONGNAMULy},`;
 
     for (let i = 0; i < coordinates.length; i += 2) {
         baseLink += `${coordinates[i]},${coordinates[i + 1]},`;
@@ -78,12 +76,12 @@ function generateKakaoMapLink(transformedTMx, transformedTMy, coordinates) {
 }
 
 function onAnalyzeClick() {
-    getCurrentLocationAndTransformToUTMK(function(transformedTMx, transformedTMy) {
-        if (transformedTMx != null && transformedTMy != null) {
+    getCurrentLocationAndTransformToWCONGNAMUL(function(transformedWCONGNAMULx, transformedWCONGNAMULy) {
+        if (transformedWCONGNAMULx != null && transformedWCONGNAMULy != null) {
             const coordinates = analyzeMapLink();
             if (coordinates && coordinates.length > 0) {
-                // 변환된 TM 좌표를 사용하여 링크를 생성합니다.
-                const kakaoMapLink = generateKakaoMapLink(transformedTMx, transformedTMy, coordinates);
+                // 변환된 WCONGNAMUL 좌표를 사용하여 링크를 생성합니다.
+                const kakaoMapLink = generateKakaoMapLink(transformedWCONGNAMULx, transformedWCONGNAMULy, coordinates);
                 const resultContainer = document.getElementById('linkAnalysisResult');
                 resultContainer.innerHTML = `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
             } else {
@@ -94,4 +92,3 @@ function onAnalyzeClick() {
         }
     });
 }
-
