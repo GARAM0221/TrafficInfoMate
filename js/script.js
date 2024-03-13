@@ -13,29 +13,30 @@ window.onload = function() {
     showSection('link-analysis');
 };
 
-function getCurrentLocationAndTransformToTM(callback) {
+function getCurrentLocationAndTransformToUTMK(callback) {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(position) {
             var currentLat = position.coords.latitude;
             var currentLng = position.coords.longitude;
             console.log("현재 위치(WGS84): ", currentLat, currentLng); // 현재 위치 로그
 
-            kakao.maps.load(function() {
-                var geocoder = new kakao.maps.services.Geocoder();
-
-                geocoder.transCoord(currentLng, currentLat, function(result, status) {
-                    if (status === kakao.maps.services.Status.OK) {
-                        console.log("변환된 TM 좌표: ", result[0].x, result[0].y); // 변환된 TM 좌표 로그
-                        callback(result[0].y, result[0].x); // 순서 주의
-                    } else {
-                        console.error("좌표 변환 실패");
-                        callback(null, null);
-                    }
-                }, {
-                    input_coord: kakao.maps.services.Coords.WGS84,
-                    output_coord: kakao.maps.services.Coords.TM
-                });
-            });
+            // Flask 앱에 좌표 변환 요청 보내기
+            fetch("https://trafficinfo-9ec9b31d0db9.herokuapp.com/convert", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    "longitude": currentLng,
+                    "latitude": currentLat
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("변환된 UTM-K 좌표: ", data.utm_x, data.utm_y); // 변환된 UTM-K 좌표 로그
+                callback(data.utm_x, data.utm_y); // 변환된 좌표를 콜백 함수로 전달
+            })
+            .catch(error => console.error("좌표 변환 실패: ", error));
         }, function(error) {
             console.error("Geolocation error: ", error.message);
         });
@@ -77,7 +78,7 @@ function generateKakaoMapLink(transformedTMx, transformedTMy, coordinates) {
 }
 
 function onAnalyzeClick() {
-    getCurrentLocationAndTransformToTM(function(transformedTMx, transformedTMy) {
+    getCurrentLocationAndTransformToUTMK(function(transformedTMx, transformedTMy) {
         if (transformedTMx != null && transformedTMy != null) {
             const coordinates = analyzeMapLink();
             if (coordinates && coordinates.length > 0) {
