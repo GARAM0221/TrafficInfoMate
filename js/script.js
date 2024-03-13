@@ -33,7 +33,7 @@ function getCurrentLocationAndTransformToWCONGNAMUL(callback) {
                     }
                 }, {
                     input_coord: kakao.maps.services.Coords.WGS84,
-                    output_coord: kakao.maps.services.Coords.WCONGNAMUL // 변경된 부분
+                    output_coord: kakao.maps.services.Coords.WCONGNAMUL
                 });
             });
         }, function(error) {
@@ -51,7 +51,8 @@ function analyzeMapLink() {
 
     linkParts.forEach(part => {
         if (part.startsWith('rt=')) {
-            const coordsPart = part.substring(3).replace(/%20/g, ' ').split(',');
+            let coordsPart = decodeURIComponent(part.substring(3)).split(',');
+            coordsPart = coordsPart.map(coord => coord.replace(/ /g, ''));
             for (let i = 0; i < coordsPart.length; i += 2) {
                 coordinates.push([parseFloat(coordsPart[i]), parseFloat(coordsPart[i + 1])]);
             }
@@ -63,7 +64,6 @@ function analyzeMapLink() {
 
 function generateKakaoMapLink(transformedWCONGNAMULx, transformedWCONGNAMULy, coordinates) {
     let baseLink = "https://map.kakao.com/?map_type=TYPE_MAP&target=car&rt=";
-    // 변환된 WCONGNAMUL 좌표를 맨 앞에 추가합니다.
     baseLink += `${transformedWCONGNAMULx},${transformedWCONGNAMULy},`;
 
     for (let i = 0; i < coordinates.length; i += 2) {
@@ -77,18 +77,13 @@ function generateKakaoMapLink(transformedWCONGNAMULx, transformedWCONGNAMULy, co
 
 function onAnalyzeClick() {
     getCurrentLocationAndTransformToWCONGNAMUL(function(transformedWCONGNAMULx, transformedWCONGNAMULy) {
-        if (transformedWCONGNAMULx != null && transformedWCONGNAMULy != null) {
-            const coordinates = analyzeMapLink();
-            if (coordinates && coordinates.length > 0) {
-                // 변환된 WCONGNAMUL 좌표를 사용하여 링크를 생성합니다.
-                const kakaoMapLink = generateKakaoMapLink(transformedWCONGNAMULx, transformedWCONGNAMULy, coordinates);
-                const resultContainer = document.getElementById('linkAnalysisResult');
-                resultContainer.innerHTML = `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
-            } else {
-                alert("링크에서 좌표를 추출할 수 없습니다.");
-            }
+        const coordinates = analyzeMapLink();
+        if (transformedWCONGNAMULx != null && transformedWCONGNAMULy != null && coordinates.length > 0) {
+            const kakaoMapLink = generateKakaoMapLink(transformedWCONGNAMULx, transformedWCONGNAMULy, coordinates);
+            const resultContainer = document.getElementById('linkAnalysisResult');
+            resultContainer.innerHTML = `<p><a href="${kakaoMapLink}" target="_blank">카카오맵에서 경로 보기</a></p>`;
         } else {
-            alert("현재 위치를 가져올 수 없습니다.");
+            alert("링크에서 좌표를 추출할 수 없거나 현재 위치를 가져올 수 없습니다.");
         }
     });
 }
