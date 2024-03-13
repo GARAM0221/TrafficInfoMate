@@ -1,7 +1,9 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS  # CORS 관련 임포트 추가
 from pyproj import Transformer
 
 app = Flask(__name__)
+CORS(app)  # Flask 앱에 CORS 적용
 
 # WGS84 좌표계에서 UTM-K(Bessel 1841) 좌표계 (EPSG:5179)로 변환
 transformer = Transformer.from_crs("epsg:4326", "epsg:5179", always_xy=True)
