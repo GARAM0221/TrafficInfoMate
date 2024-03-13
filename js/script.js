@@ -107,14 +107,19 @@ function displayRoadview(lat, lng, title) {
     });
 }
 
-// 입력된 링크를 분석하여 로드뷰를 표시하는 함수를 호출합니다.
+// 기존 함수들은 그대로 유지하고, 로드뷰 보기 기능만 추가합니다.
+
+// 로드뷰 보기 버튼 클릭 이벤트 핸들러
 function onShowRoadviewClick() {
-    const mapLink = document.getElementById('mapLinkInput').value;
-    // 링크 분석 로직 추가(위도, 경도, 이름 추출)
-    // 예시로, 간단한 분석 로직을 구현합니다. 실제로는 링크 형식에 따라 분석 로직을 구현해야 합니다.
-    // 분석된 정보를 바탕으로 displayRoadview 함수를 호출합니다.
-    const dummyLat = 33.450701;
-    const dummyLng = 126.570667;
-    const dummyTitle = "카카오 본사";
-    displayRoadview(dummyLat, dummyLng, dummyTitle);
+    const coordinates = analyzeMapLink(); // 기존 analyzeMapLink 함수를 이용하여 링크에서 좌표 추출
+    if (coordinates.length > 0) {
+        const lat = coordinates[0][1]; // 위도
+        const lng = coordinates[0][0]; // 경도
+        const title = "선택한 위치"; // 추출된 위치의 이름 (추가 정보가 필요하면 분석 로직 수정 필요)
+        displayRoadview(lat, lng, title);
+    } else {
+        alert("링크에서 좌표를 추출할 수 없습니다.");
+    }
 }
+
+// 이전에 추가한 모든 기능을 유지합니다.
